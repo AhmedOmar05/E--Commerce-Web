@@ -1,125 +1,155 @@
 import React, { useContext, useState } from 'react'
-import loginIcons from '../assest/signin.gif'
-import { FaEye } from "react-icons/fa";
-import { FaEyeSlash } from "react-icons/fa";
-import { Link, useNavigate } from 'react-router-dom';
-import SummaryApi from '../common';
-import { toast } from 'react-toastify';
-import Context from '../context';
+import { motion } from 'framer-motion'
+import { FaEye, FaEyeSlash, FaGoogle, FaGithub } from 'react-icons/fa'
+import { Link, useNavigate } from 'react-router-dom'
+import SummaryApi from '../common'
+import { toast } from 'react-toastify'
+import Context from '../context'
+import { FaUserCircle } from "react-icons/fa";
 
 const Login = () => {
-    const [showPassword,setShowPassword] = useState(false)
-    const [data,setData] = useState({
-        email : "",
-        password : ""
-    })
+    const [showPassword, setShowPassword] = useState(false)
+    const [data, setData] = useState({ email: '', password: '' })
+    const [isLoading, setIsLoading] = useState(false)
     const navigate = useNavigate()
     const { fetchUserDetails, fetchUserAddToCart } = useContext(Context)
 
-    const handleOnChange = (e) =>{
-        const { name , value } = e.target
-
-        setData((preve)=>{
-            return{
-                ...preve,
-                [name] : value
-            }
-        })
+    const handleOnChange = (e) => {
+        const { name, value } = e.target
+        setData(prev => ({ ...prev, [name]: value }))
     }
 
-
-    const handleSubmit = async(e) =>{
+    const handleSubmit = async (e) => {
         e.preventDefault()
+        setIsLoading(true)
 
-        const dataResponse = await fetch(SummaryApi.signIn.url,{
-            method : SummaryApi.signIn.method,
-            credentials : 'include',
-            headers : {
-                "content-type" : "application/json"
-            },
-            body : JSON.stringify(data)
-        })
+        try {
+            const response = await fetch(SummaryApi.signIn.url, {
+                method: SummaryApi.signIn.method,
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
 
-        const dataApi = await dataResponse.json()
+            const result = await response.json()
 
-        if(dataApi.success){
-            toast.success(dataApi.message)
-            navigate('/')
-            fetchUserDetails()
-            fetchUserAddToCart()
+            if (result.success) {
+                toast.success(result.message)
+                navigate('/')
+                fetchUserDetails()
+                fetchUserAddToCart()
+            } else {
+                toast.error(result.message)
+            }
+        } catch (error) {
+            toast.error('An error occurred. Please try again.')
+        } finally {
+            setIsLoading(false)
         }
-
-        if(dataApi.error){
-            toast.error(dataApi.message)
-        }
-
     }
 
-    console.log("data login",data)
-    
-  return (
-    <section id='login'>
-        <div className='mx-auto container p-4'>
-
-            <div className='bg-white p-5 w-full max-w-sm mx-auto'>
-                    <div className='w-20 h-20 mx-auto'>
-                        <img src={"http://localhost:8080/"+loginIcons} alt='login icons'/>
+    return (
+        <motion.section
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50 p-4"
+        >
+            <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8">
+                <motion.div
+                    initial={{ scale: 0.9 }}
+                    animate={{ scale: 1 }}
+                    className="flex flex-col items-center"
+                >
+                    <div className="w-24 h-24 mb-6 flex items-center justify-center text-blue-600">
+                        <FaUserCircle size={90} />
                     </div>
 
-                    <form className='pt-6 flex flex-col gap-2' onSubmit={handleSubmit}>
-                        <div className='grid'>
-                            <label>Email : </label>
-                            <div className='bg-slate-100 p-2'>
-                                <input 
-                                    type='email' 
-                                    placeholder='enter email' 
-                                    name='email'
-                                    value={data.email}
-                                    onChange={handleOnChange}
-                                    className='w-full h-full outline-none bg-transparent'/>
-                            </div>
-                        </div>
+                    <h1 className="text-3xl font-bold text-gray-800 mb-8">Welcome Back</h1>
 
-                        <div>
-                            <label>Password : </label>
-                            <div className='bg-slate-100 p-2 flex'>
-                                <input 
-                                    type={showPassword ? "text" : "password"} 
-                                    placeholder='enter password'
+                    <form onSubmit={handleSubmit} className="w-full space-y-6">
+                        <motion.div
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: 0.2 }}
+                        >
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Email
+                            </label>
+                            <input
+                                type="email"
+                                name="email"
+                                value={data.email}
+                                onChange={handleOnChange}
+                                placeholder="Enter your email"
+                                className="w-full px-4 py-3 rounded-lg bg-gray-50 border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                                required
+                            />
+                        </motion.div>
+
+                        <motion.div
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: 0.3 }}
+                        >
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Password
+                            </label>
+                            <div className="relative">
+                                <input
+                                    type={showPassword ? "text" : "password"}
+                                    name="password"
                                     value={data.password}
-                                    name='password' 
                                     onChange={handleOnChange}
-                                    className='w-full h-full outline-none bg-transparent'/>
-                                <div className='cursor-pointer text-xl' onClick={()=>setShowPassword((preve)=>!preve)}>
-                                    <span>
-                                        {
-                                            showPassword ? (
-                                                <FaEyeSlash/>
-                                            )
-                                            :
-                                            (
-                                                <FaEye/>
-                                            )
-                                        }
-                                    </span>
-                                </div>
+                                    placeholder="Enter your password"
+                                    className="w-full px-4 py-3 rounded-lg bg-gray-50 border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all pr-12"
+                                    required
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-blue-600 transition-colors"
+                                >
+                                    {showPassword ? <FaEyeSlash size={20} /> : <FaEye size={20} />}
+                                </button>
                             </div>
-                            <Link to={'/forgot-password'} className='block w-fit ml-auto hover:underline hover:text-red-600'>
-                                Forgot password ?
+                            <Link
+                                to="/forgot-password"
+                                className="text-sm text-blue-600 hover:text-blue-700 float-right mt-2"
+                            >
+                                Forgot password?
                             </Link>
-                        </div>
+                        </motion.div>
 
-                        <button className='bg-red-600 hover:bg-red-700 text-white px-6 py-2 w-full max-w-[150px] rounded-full hover:scale-110 transition-all mx-auto block mt-6'>Login</button>
-
+                        <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.4 }}
+                        >
+                            <button
+                                type="submit"
+                                disabled={isLoading}
+                                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 px-6 rounded-lg font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {isLoading ? 'Logging in...' : 'Login'}
+                            </button>
+                        </motion.div>
                     </form>
 
-                    <p className='my-5'>Don't have account ? <Link to={"/sign-up"} className=' text-red-600 hover:text-red-700 hover:underline'>Sign up</Link></p>
+
+                    <p className="text-center mt-8 text-gray-600">
+                        Don't have an account?{' '}
+                        <Link
+                            to="/sign-up"
+                            className="text-blue-600 hover:text-blue-700 font-semibold"
+                        >
+                            Sign up
+                        </Link>
+                    </p>
+                </motion.div>
             </div>
-
-
-        </div>
-    </section>
-  )
+        </motion.section>
+    )
 }
 
 export default Login
